@@ -33,5 +33,3 @@ if __name__ == "__main__":
     prepare_modle()
     print(capture_face())
     unload_model()
-    
-    

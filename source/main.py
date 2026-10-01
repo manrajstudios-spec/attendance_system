@@ -8,7 +8,7 @@ from rich.console import Console
 from datetime import datetime,date
 from record_new_face import capture_face
 
-attendace_database_conn = sqlite3.connect("data/attendance_database.db")
+attendace_database_conn = sqlite3.connect("data/attendance_database.db",check_same_thread=False)
 cur = attendace_database_conn.cursor()
 
 attenace_time_range = (9,11)
@@ -27,6 +27,11 @@ def ask_user(to_ask,empty_allowed = False):
         
         if user_input:
             return user_input
+
+def list_all_batches():
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+
+    return [row[0] for row in cur.fetchall()] # row[0] bcz fetchall returns a tuple so names will be as [(a,),(b,),....,]
         
 def admin_login_handler():
     try :
@@ -63,9 +68,7 @@ def id_exists(table_name,idd):
     cur.execute(f"SELECT 1 FROM '{table_name}' WHERE id=?",(idd,))
     return cur.fetchone() is not None
     
-def add_new_batch():
-    selected_batch = ask_user("[bold blue]Enter Name Of Batch You Wanna Add: [/bold blue]")
-    
+def add_new_batch(selected_batch):    
     if table_exists(selected_batch):
         return False
     else:
@@ -77,9 +80,7 @@ def add_new_batch():
 
         return True
 
-def delete_a_batch():
-    selected_batch = ask_user("[bold cyan]Enter Name Of Batch You Wanna Remove: [/bold cyan]")
-    
+def delete_a_batch(selected_batch):    
     if table_exists(selected_batch):
         cur.execute(f"DROP TABLE '{selected_batch}'")
         
@@ -94,16 +95,10 @@ def delete_a_batch():
         print("[bold red]Table Not Found[/bold red]")
         return False
         
-def remove_a_student():
-    selected_batch = ask_user("[bold purple]Enter Name Of Batch You Wanna Remove A Student From: [/bold purple]")
-    
+def remove_a_student(selected_batch,idd):
     if selected_batch == "q":
         return False
-
-    idd = ""
-    if table_exists(selected_batch):
-        idd = ask_user("[bold lime]Enter Id Of Student You wanna Remove: [bold /lime]")
-        
+    if table_exists(selected_batch):        
         if id_exists(selected_batch,idd) and idd.isdigit():
             cur.execute(f"DELETE FROM '{selected_batch}' WHERE id=?",(idd,))
 
@@ -122,21 +117,16 @@ def remove_a_student():
         print("[bold red]Batch Not Found[/bold red]")
         return False
     
-def enroll_a_student():
+def enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embedding):
     selected_batch = ask_user("[bold blue]Enter The Name Of Batch You Wanna Enroll A Student In: [/bold blue]")
     
     if table_exists(selected_batch):
-        name_of_student = input("[bold cyan]Enter The Name Of Student Your Wanna Enroll: [/bold cyan]")
-        age_of_student = input("[bold cyan]Enter The Age Of Student You Wanna Enroll: [/bold cyan]")
-        
         joining_date = date.today()
         joining_date = f"Date: {joining_date.day}\nMonth: {joining_date.month}\nYear: {joining_date.year}"
         
         path = f"{embedding_file_det}{selected_batch}.npy"
         stored_embeddings = np.load(path)
 
-        new_face_embedding = capture_face()
-        
         sims = (stored_embeddings @ new_face_embedding.T).flatten()
         
         maxx = sims.max()
@@ -160,7 +150,7 @@ def enroll_a_student():
         np.save(path,stored_embeddings)
         
         if isinstance(new_face_embedding,str) or isinstance(new_face_embedding,bool):
-            return new_face_embedding
+            return False
         else:
             return assigned_id
     else:
@@ -171,17 +161,18 @@ def admin_options():
     options = "[bold purple]Press 1 To Add New Batch \nPress 2 To Delete A Batch \nPress 3 To Remove A Student \nPress 4 To Enroll A Student\nPress Q to Quit\n: [/bold purple]"
 
     while True:
-        cur.execute('SELECT name FROM sqlite_master WHERE type = "table" AND name NOT LIKE "sqlite_%" ORDER BY name')
+    
+        names = list_all_batches() 
         
-        names = [row[0] for row in cur.fetchall()] # row[0] bcz fetchall returns a tuple so names will be as [(a,),(b,),....,]
-
         for i,name in enumerate(names):
             print(f"[bold purple]{i}: {name}\n [/bold purple]")
 
         option_selected = ask_user(options)
         
+        selected_batch = ask_user("[bold blue]Enter Name Of Batch You Wanna Add: [/bold blue]")
+        
         if option_selected == '1':
-            out = add_new_batch()
+            out = add_new_batch(selected_batch)
 
             if not out:
                 print("[bold yellow]Batch With This Name Already Exists [/bold yellow]")
@@ -189,7 +180,7 @@ def admin_options():
                 print("[bold green]Batch Created [/bold green]")
 
         elif option_selected == '2':
-            out = delete_a_batch()
+            out = delete_a_batch(selected_batch)
 
             if out:
                 print("[bold green]Batch Deleted [/bold green]")
@@ -197,7 +188,8 @@ def admin_options():
                 print("[bold orange]No Batch Exists With This Name [/bold orange]")
 
         elif option_selected == '3':
-            out = remove_a_student()
+            idd = ask_user("[bold lime]Enter Id Of Student You wanna Remove: [bold /lime]")
+            out = remove_a_student(selected_batch,idd)
             
             if out:
                 print("[bold green]Student Removed [/bold green]")
@@ -205,7 +197,11 @@ def admin_options():
                 print("[bold yellow]No Student With This id Is Registered [/bold yellow]")
 
         elif option_selected == '4':
-            out = enroll_a_student()
+            name_of_student = input("[bold cyan]Enter The Name Of Student Your Wanna Enroll: [/bold cyan]")
+            age_of_student = input("[bold cyan]Enter The Age Of Student You Wanna Enroll: [/bold cyan]")
+            new_face_embedding = capture_face()
+                    
+            out = enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embedding)
             
             if isinstance(out,str):
                 print(f"[bold red] {out} [/bold red]")

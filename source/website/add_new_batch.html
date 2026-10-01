@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            New Batch
+        </title>
+    </head>
+    
+    <body>
+        <h1>
+            New Batch Widndow
+        </h1>
+        
+        <div id="error">
+            <span>
+                &emsp; This Batch 
+                <br>
+                &ensp;Already Exists
+            </span>
+        </div>
+
+        <form action="add_new_batch.html" id="batch">
+            <input type="text" required placeholder="Enter Batch Name" id="batch_name">
+            <br><br>
+            <button type="submit" class="btn">Submit</button>
+        </form>
+
+        <script>
+            async function auth_check(){
+                const auth = await fetch("http://127.0.0.1:8004/check_auth");
+    
+                const result_auth = await auth.json();
+    
+                if (!result_auth["auth"]){
+                    window.location.href = "admin_login_page.html";
+                }
+            }
+
+            auth_check();
+
+            const form = document.getElementById("batch");
+
+            
+            form.addEventListener("submit",async (event) => {
+                    event.preventDefault();
+                    const error = document.getElementById("error");
+
+                    function disable_error(){
+                        error.classList.remove("show");
+                    }
+
+                    const input_feild = document.getElementById("batch_name");
+
+                    const response = await fetch("http://127.0.0.1:8004/validate_batch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({batch_name:input_feild.value})});
+
+                    const result = await response.json();
+
+                    if (result["sucess"]){
+                        error.classList.add("show");
+                        await new Promise(resolve => setTimeout(resolve,3000));
+                        error.classList.remove("show");
+                        window.location.href = "admin_page.html"
+                    }
+                    else{
+                        window.location.href = "admin_page.html"
+                    }
+            });
+        </script>
+
+        <style>
+            #error{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                opacity: 0;
+                transform: translateY(-70px);
+                transition: all 0.15s ease-in-out;
+            }
+
+            #error.show{
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            span{
+                border: solid 3px rgba(175, 9, 9, 0.793);
+                border-radius: 15px;
+                padding: 15px 15px;
+                color: whitesmoke;
+                font-family: 'Segoe UI', sans-serif;
+                font-weight: 800;
+                background-color: rgba(215, 12, 12, 0.874);
+            }
+
+            h1{
+                color: whitesmoke;
+                background:linear-gradient(120deg ,red ,blue);
+                background-clip: border-box;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-family:Arial, Helvetica, sans-serif;
+                font-weight: 700;
+                font-size: 30px;
+                text-align: center;
+            }
+            #batch_name{
+                border: none;
+                border-radius: 15px;
+                background-color: rgba(17, 0, 255, 0.665);
+                padding: 10px 10px;
+                font-size: 15px;
+                font-family: 'Courier New',monospace;
+                font-weight: 700;
+                transition: all 0.2s ease-in;
+                box-shadow: 0 4px 20px rgba(60, 37, 235, 0.593);
+                cursor: pointer;
+            }
+            #batch_name:hover{
+                transform: translateY(2px) scale(1.1);
+                background-color: rgb(55, 0, 255);
+                box-shadow: 0 7px 50 rgba(37, 156, 235, 0.593);
+            }
+
+            form{
+                min-height: 70vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 7px;
+            }
+            .btn{
+                color: white;
+                border: none;
+                border-radius: 20px;
+                padding: 20px 20px;
+                font-family: Arial;
+                font-weight: 800;
+                font-size: 15px;
+                background-color: rgba(0, 17, 255, 0.828);
+                cursor:pointer;
+                transition: all 0.2s ease-in-out; 
+                box-shadow: 0 4px 20px rgba(37, 146, 235, 0.593);
+            }
+
+            .btn:hover{
+                transform: translateY(2px);
+                transform: scale(1.1);
+                background-color: rgba(30, 0, 255, 0.51);
+                box-shadow: 0 4px 10px rgba(235, 44, 37, 0.25);
+            }
+        </style>
+    </body>
+</html>

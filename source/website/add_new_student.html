@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            New Student
+        </title>
+    </head>
+
+    <body>
+        <h1>Add New Student</h1>
+        
+        <form action="add_new_student.html" id="student_form">
+            <input type="text" id="student_name" class="input_feild" required placeholder="Enter Name">
+            <input type="text" id="student_name" class="input_feild" required placeholder="Enter Name">
+            <input type="number" id="student_age" class="input_feild" required placeholder="Enter Age">
+            
+            <video id="camera" autoplay></video>
+
+            <button id="capture" class="input_feild" type="button">Capture</button>
+
+            <button id="reset" class="input_feild" type="button">Reset Video</button>
+
+            <canvas id="canvas" style="display: none;"></canvas>
+
+            <button type="submit" class="input_feild">Submit</button>
+
+            <div id="warning">
+                <p id="warning_pic">
+                    Plz Click Picture
+                </p>
+            </div>
+        </form>
+
+        <script>
+            async function auth_check() {
+                const auth_ = await fetch("");
+                const result = await auth_.json();
+
+                if (!result["auth"]){
+                    window.location.href = "admin_login_page.html";
+                }
+            }
+
+            auth_check();
+
+            const reset_button = document.getElementById("reset");
+
+            reset_button.classList.add("disable");
+
+            const video  = document.getElementById("camera");
+            const canvas  = document.getElementById("canvas");
+
+            navigator.mediaDevices.getUserMedia({video:true}).then(stream => {video.srcObject = stream;}); 
+            //get user media gives a promise and .then when promise is fullfilled gives us stream which we then give to video
+
+            const capture_button = document.getElementById("capture");
+
+            let base64_str = null;
+
+            capture_button.addEventListener("click",() => {
+                video.pause();
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                const ctx = canvas.getContext("2d"); // it gives an object that lets us draw on canvas
+
+                ctx.translate(canvas.width,0);
+                ctx.scale(-1,1);
+                
+                ctx.drawImage(video,0,0);
+                canvas.toBlob(blob => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = function() {base64_str = reader.result;}
+
+
+                    reset_button.classList.remove("disable");
+                    capture_button.classList.add("disable");
+                });
+            });
+
+            reset_button.addEventListener("click",()=>{
+                base64_str = null;
+                reset_button.classList.add("disable");
+                capture_button.classList.remove("disable");
+                video.play();
+            });          
+            
+            const form = document.getElementById("student_form");
+
+            form.addEventListener("submit",async (event) => {
+                event.preventDefault();
+                if (capture_button.classList.contains("disable")){
+                    const response = await fetch("http://127.0.0.1:8004/add_new_student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({student_name:document.getElementById("student_name").value,student_age:document.getElementById("student_age"),picture:base64_str})});
+
+                    const result = await response.json();
+
+                    if(result["sucess"]){
+                        const warning = document.getElementById("warning_pic");
+                        warning.textContent = "Picture Clicked Closing Now";
+                        
+                        warning.classList.add("enable");
+    
+                        await new Promise(resolve => setTimeout(resolve,1000));
+                        
+                        warning.classList.remove("enable");
+
+                        window.location.href = "admin_page.html";
+                    }
+                    else{
+                        const warning = document.getElementById("warning_pic");
+
+                        warning.textContent = "SOME ERROR OCCURED";
+
+                        warning.classList.add("enable");
+    
+                        await new Promise(resolve => setTimeout(resolve,1000));
+                        
+                        warning.classList.remove("enable");
+
+                        window.location.href = "add_new_student.html";
+                    }
+                }
+                else{
+                    const warning = document.getElementById("warning_pic");
+
+                    warning.classList.add("enable");
+
+                    await new Promise(resolve => setTimeout(resolve,3000));
+                    
+                    warning.classList.remove("enable");
+                }
+            });
+
+        </script>
+
+        <style>
+            h1{
+                color: whitesmoke;
+                background:linear-gradient(120deg ,red ,blue);
+                background-clip: border-box;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                font-family:Arial, Helvetica, sans-serif;
+                font-weight: 700;
+                font-size: 30px;
+                text-align: center;
+            }
+
+            .input_feild.disable{
+                opacity: 0;
+            }
+
+            #student_form{
+                min-height: 70vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+            }
+
+            #warning_pic{
+                opacity: 1;
+                color: white;
+                border: none;
+                border-radius: 20px;
+                padding: 20px 20px;
+                font-family: Arial;
+                font-weight: 800;
+                font-size: 15px;
+                background-color: rgba(217, 255, 0, 0.828);
+                box-shadow: 0 4px 20px rgba(179, 235, 37, 0.593);
+                transition: all 0.3s ease-in-out;
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            #warning_pic.enable{
+                transform: translate(0);
+                opacity: 1;
+            }
+            .input_feild{
+                opacity: 1;
+                color: white;
+                border: none;
+                border-radius: 20px;
+                padding: 20px 20px;
+                font-family: Arial;
+                font-weight: 800;
+                font-size: 15px;
+                background-color: rgba(0, 17, 255, 0.828);
+                cursor:pointer;
+                transition: all 0.2s ease-in-out; 
+                box-shadow: 0 4px 20px rgba(37, 146, 235, 0.593);
+            }
+
+            .input_feild:hover{
+                transform: translateY(2px);
+                transform: scale(1.1);
+                background-color: rgba(30, 0, 255, 0.51);
+                box-shadow: 0 4px 10px rgba(235, 44, 37, 0.25);
+            }
+        </style>
+    </body>
+</html>

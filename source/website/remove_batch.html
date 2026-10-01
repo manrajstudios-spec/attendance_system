@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Remove batch
+        </title>
+    </head>
+    <body>
+        <h1>Click On Batch To Remove It</h1>
+        
+        <div id="error">
+            <p id="msg">
+            &emsp; No Batches Found 
+            <br>
+            Returning To Home Page
+        </p>
+        </div>
+        
+
+        <form action="remove_batch.html" id="available_batches">
+
+        </form>
+    </body>
+
+    <script>
+        const bacthes_form = document.getElementById("available_batches");
+
+        function error_func(){
+            error_div.classList.remove("e");
+        }
+
+        async function auth_check(){
+            const auth = await fetch("http://127.0.0.1:8004/check_auth");
+
+            const result_auth = await auth.json();
+
+            if (!result_auth["auth"]){
+                window.location.href = "admin_login_page.html";
+            }
+        }
+
+        auth_check();
+        const error_div = document.getElementById("error");
+
+        async function get_batches(){
+            const batches_p = await fetch("http://127.0.0.1:8004/list_batches");
+    
+            const batches = await batches_p.json();
+
+            bacthes_form.innerHTML = "";
+            
+            if (batches["batches_list"].length <= 0){
+                error_div.classList.add("e");
+    
+                await new Promise(resolve => setTimeout(resolve,3000));
+                error_div.classList.remove("e");
+    
+                window.location.href = "admin_page.html";
+            }
+    
+    
+            for (let i =0; i< batches["batches_list"].length; i++){
+                const b = document.createElement("button");
+                b.type = "submit";
+                b.value= batches["batches_list"][i];
+                b.classList.add("batch_element");
+                b.textContent = batches["batches_list"][i];
+                bacthes_form.appendChild(b);
+            }
+        }
+
+        get_batches();
+
+        bacthes_form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const value = event.submitter.value;
+
+            const response = await fetch("http://127.0.0.1:8004/remove_batch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({batch_name:value})});
+
+            const result = await response.json();
+
+            const msg = document.getElementById("msg");
+            
+            msg.textContent = "Batch Removed";
+            error_div.classList.add("e");
+
+            get_batches();
+            await new Promise(resolve => setTimeout(resolve,3000));
+            error_div.classList.remove("e");
+
+            window.location.href = "admin_page.html";            
+        });
+
+        
+    </script>
+
+    <style>
+        h1{
+            text-align: center;
+            margin-top: 18px;
+
+            font-family: Arial, sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+
+            background: linear-gradient(120deg, #25caeb, #4653e5);
+            background-clip:content-box;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            letter-spacing: -0.7px;
+        }
+        .batch_element{
+            color: white;
+            font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+            font-weight: 600;
+            border: solid 3px rgba(3, 217, 181, 0.691);
+            border-radius: 20px;
+            padding: 15px 15px;
+            background-color: rgba(0, 255, 149, 0.621);
+            box-shadow: 0px 4px 10px rgba(0, 255, 149, 0.621);
+            cursor: pointer;
+        }
+        
+        .batch_element:hover{
+            transform: translateY(2px) scale(1.1);
+            background-color: #25caeb;
+        }
+        #available_batches{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #error{
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(-100px);
+            transition: all 0.2s ease-in-out;
+        }
+        #error.e{
+            transform: translateY(0);
+            opacity: 1;
+        }
+        #msg{
+            color: white;
+            font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+            font-weight: 600;
+            border: solid 3px rgba(215, 2, 30, 0.691);
+            border-radius: 15px;
+            padding: 5px 5px;
+            background-color: rgba(255, 0, 0, 0.621);
+        }
+
+    </style>
+</html>

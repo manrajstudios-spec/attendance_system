@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Admin Login Page
+        </title>
+    </head>
+
+    <body>
+        <h1>Login Page</h1>
+        
+        <div id="error">
+            <span>
+                Incorect Password
+            </span>
+        </div>
+
+        <form action="admin_login_page.html" id="login">
+            <input type="password" placeholder="Enter Password" id="pass" required>
+            <br>
+            <button type="submit" id="btn">
+                Submit
+            </button>
+        </form>
+        
+
+        <script>
+            const form = document.getElementById("login");
+
+            form.addEventListener("submit",async (event) => {
+                event.preventDefault();
+
+                function hide_error(){
+                    const error = document.getElementById("error");
+
+                    error.classList.remove("show");
+                }
+
+                const input_pass_feild = document.getElementById("pass");
+                
+                console.log(input_pass_feild.value)
+                const response = await fetch("http://127.0.0.1:8004/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:input_pass_feild.value})})
+
+                const result = await response.json()
+
+                if(result["sucess"]){
+                    window.location.href = "admin_page.html"
+                }
+                else{
+                    const error = document.getElementById("error");
+                    error.classList.add("show");
+
+                    await new Promise(resolve => setTimeout(resolve,3000));
+                    error.classList.remove("show");
+                    window.location.href = "main_menu.html"
+                }
+            });
+
+        </script>
+
+        <style>
+
+            #error{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                transform: translateY(-50px);
+                opacity: 0;
+                transition: 0.2s ease-in-out;
+            }
+
+            #error.show{
+                opacity: 1;
+                transform: translate(0px);
+            }
+
+            span{
+                border: solid 3px rgba(253, 40, 2, 0.937);
+                border-radius: 20px;
+                padding: 10px 10px;
+                color: white;
+                font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+                font-size: 15px;
+                font-weight: 800;
+                letter-spacing: 1.2px;
+                background-color: rgba(229, 7, 7, 0.689);
+            }
+
+            h1{
+                text-align: center;
+                border: none;
+                margin-top: 20px;
+                color: white;
+                font-family: Arial,sans-serif;
+                font-size: 28px;
+                font-weight: 700;
+                background: linear-gradient(120deg, rgba(9, 163, 180, 0),rgb(9, 215, 198));
+                background-clip: border-box;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                letter-spacing: 2px;
+            }
+
+            form{
+                min-height: 30vh;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+                gap:15px
+            }
+
+            #pass{
+                border: none;
+                border-radius: 15px;
+                background-color: rgba(9, 205, 201, 0.632);
+                padding: 10px 10px;
+                font-size: 15px;
+                font-family: 'Courier New',monospace;
+                font-weight: 700;
+                transition: all 0.2s ease-in;
+                box-shadow: 0 4px 20px rgba(37, 235, 215, 0.593);
+                cursor: pointer;
+            }
+
+            #pass:hover{
+                transform: translateY(2px) scale(1.1);
+                background-color: rgb(0, 255, 229);
+                box-shadow: 0 7px 50 rgba(37, 156, 235, 0.593);
+            }
+
+            #btn{
+                border: none;
+                border-radius: 15px;
+                background-color: rgba(9, 205, 201, 0.632);
+                padding: 15px 25px;
+                font-size: 15px;
+                font-family: 'Courier New',monospace;
+                font-weight: 700;
+                transition: all 0.2s ease-in;
+                box-shadow: 0 4px 20px rgba(37, 235, 215, 0.593);
+                cursor: pointer;
+            }
+
+            #btn:hover{
+                transform: translateY(2px) scale(1.1);
+                background-color: rgb(0, 255, 229);
+                box-shadow: 0 7px 50 rgba(37, 156, 235, 0.593);
+            }
+        </style>
+    </body>
+</html>

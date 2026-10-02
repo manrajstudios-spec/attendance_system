@@ -14,7 +14,7 @@ def compare_pass(entered_pass):
     try:
         with open(pass_file,'r') as f:
             admin_pass = f.read().strip().encode("utf-8")
-            print("OLd")
+            print("Old")
     except:
         admin_pass = record_new_password(entered_pass).encode("utf-8")
         print("NEW")

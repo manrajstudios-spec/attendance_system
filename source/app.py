@@ -5,82 +5,125 @@ from fastapi import FastAPI
 from admin_auth import compare_pass
 from call_modle import recognize_faces
 from fastapi.middleware.cors import CORSMiddleware
-from main import add_new_batch,delete_a_batch,enroll_a_student,remove_a_student,table_exists,list_all_batches
+from main import add_new_batch,delete_a_batch,enroll_a_student,remove_a_student,table_exists,list_all_batches,conduct_attendance
 
 app = FastAPI()
 
-app.add_middleware(middleware_class=CORSMiddleware,allow_credentials=True,allow_methods=["*"],allow_origins=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 auth_done = False
+selected_batch = ""
 
-@app.get("/main_menu")
-def main_menu():
-    global auth_done
+@app.get("/reset_auth")
+def reset_auth():
+    global auth_done,selected_batch
+    
     auth_done = False
+    selected_batch = ""
     
-    return {"auth":False}
+    return {"success":True}
 
-@app.post("/login")
-def login(password:dict):
+@app.post("/verify_password")
+def varify_password(password_holder:dict):
     global auth_done
-    done = compare_pass(password["password"])
-
-    auth_done = done
-
-    return {"sucess":done}
-
-@app.get("/list_batches")
-def list_batches():
-    all_batches = list_all_batches()
+    admin_password = password_holder["admin_password"]
     
-    print(all_batches)
-    return {"batches_list":all_batches}
-
-@app.post("/remove_batch")
-def remove_batch(batch_name:dict):
-    exists = table_exists(batch_name["batch_name"])
+    result = compare_pass(admin_password)
     
-    print(f"Exists: {exists}")
-
-    if exists:
-        delete_a_batch(batch_name["batch_name"])
+    auth_done = result
     
-    return {"sucess":exists}
-
+    print(f"Password Was {"correct" if result else  "InCorrect"}")
+    return {"success":result}
+    
 @app.get("/check_auth")
 def check_auth():
-    return {"auth":auth_done}
-
-@app.post("/validate_batch")
-def validate_batch(batch_name:dict):
-    print(f"Batch Name: {batch_name["batch_name"]}")
-
-    exists = table_exists(batch_name["batch_name"])
+    print(f"Auth Status: {"Authenticated" if auth_done else "Un Authenticated"}")
     
-    if not exists:
-        add_new_batch(batch_name["batch_name"]) 
+    return {"auth_status":auth_done}
 
-    return {"sucess":exists}
+@app.post("/add_new_batch")
+def add_batch(batch_data:dict):
+    batch_name = batch_data["batch_name"]
+    
+    batch_result = add_new_batch(batch_name)
+    
+    print(f"Batch Result: {batch_result}")
 
-@app.post("/add_new_student")
-def add_student(data:dict):
-    student_name = data["student_name"]
-    student_age = data["student_age"]
-    blob = data["picture"]
-    
-    image_bytes = base64.b64decode(blob.split(",")[1])
-        
-    cv_image = cv2.imdecode(np.frombuffer(image_bytes,np.uint8),cv2.IMREAD_COLOR)
-    
-    result = recognize_faces(cv_image)
-    
-    if isinstance(result,str):
-        return {"sucess":False}
-    else:
-        result = enroll_a_student()
-        if not result:
-            return {"sucess":False}
-        else:
-            return {"sucess":True}
+    return {"success":batch_result}
 
+@app.get("/list_batches")
+def return_batches():
+    all_batches = list_all_batches()
+    
+    print(f"All Batches: {all_batches}")
+    return {"all_batches":all_batches}
+
+@app.post("/remove_batch")
+def remove_batches(batch_name_object:dict):
+    result = delete_a_batch(batch_name_object["batch_name"])
+    
+    print(f"Batch With The Name: {batch_name_object["batch_name"]} Was {"Successfully Removed" if result else "Wasnt Removed"}")
+    
+    return {"success":result}
+
+@app.post("/enroll_student")
+def add_student(student_data:dict):
+    student_name = student_data["student_name"]
+    student_age = student_data["student_age"]
+    selected_program = student_data["selected_batch"]
+    
+    base64_pic = student_data["student_picture"]
+    
+    image_bytes = base64.b64decode(base64_pic.split(",")[1])
+
+    image_in_bytes = np.frombuffer(image_bytes,np.uint8)
+    
+    cv_im = cv2.imdecode(image_in_bytes,cv2.IMREAD_COLOR)
+    
+    face_emebdding = recognize_faces(cv_im)
+    
+    if isinstance(face_emebdding,str):
+        return {"output_reply": face_emebdding}
+    
+    result = enroll_a_student(selected_program,student_name,student_age,face_emebdding)
+    
+    return {"output_reply":result}
+    
+@app.post("/remove_student")
+def remove_student(student_data:dict):
+    student_id = student_data["student_id"]
+    selected_batch = student_data["selected_batch"]
+    
+    print(f"Batch: {selected_batch} IDD: {student_id}")
+    
+    result = remove_a_student(selected_batch=selected_batch,idd=student_id)
+
+    print(f"Removing Status: {result}")
+
+    return {"success":result}
+
+@app.post("/attend_class")
+def attend_class(student_data:dict):
+    selected_batch = student_data["selected_batch"]
+    base64_image = student_data["student_picture"]
+    
+    image_bytes = base64.b64decode(base64_image.split(",")[1])
+    image_in_bytes = np.frombuffer(image_bytes,np.uint8)
+    cv_im = cv2.imdecode(image_in_bytes,cv2.IMREAD_COLOR)
+
+    face_emebdding = recognize_faces(cv_im)
+
+    if isinstance(face_emebdding,str):
+        return {"result":face_emebdding}
+
+    result = conduct_attendance(selected_batch,face_emebdding)
+
+    return {"result":result}
+    
     

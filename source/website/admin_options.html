@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Admin Options
+        </title>
+    </head>
+
+    <body>
+        <h1>Admin Options</h1>
+
+        <form action="admin_options.html" id="admin_options_form">
+            <button type="submit" value="add_batch" class="btn">Add New Batch</button>
+            <button type="submit" value="remove_batch" class="btn">Remove A Batch</button>
+            <button type="submit" value="new_student" class="btn">Enroll A Student</button>
+            <button type="submit" value="remove_student" class="btn">Remove A Student</button>
+        </form>
+
+        <script>
+            async function check_auth(){
+                const response = await fetch("http://127.0.0.1:8004/check_auth");
+
+                const result = await response.json();
+                
+                if(!result["auth_status"]){
+                    window.location.href = "admin_login_page.html";
+                }
+            }
+
+            check_auth();
+
+            const admin_options_form = document.getElementById("admin_options_form");
+
+            admin_options_form.addEventListener("submit",(event) => {
+                event.preventDefault();
+
+                if(event.submitter.value === "add_batch"){
+                    window.location.href = "add_new_batch.html";
+                }
+                else if(event.submitter.value === "remove_batch"){
+                    window.location.href = "remove_batch.html";
+                }
+                else if(event.submitter.value === "new_student"){
+                    window.location.href = "enroll_student.html";
+                }
+                else{
+                    window.location.href = "remove_student.html";
+                }
+            });
+
+        </script>
+
+        <style>
+            h1{
+                text-align: center;
+                font-family:Georgia, 'Times New Roman', serif;
+                font-size: 30px;
+                color: transparent;
+
+                background: linear-gradient(120deg, rgb(3, 159, 21), rgb(0, 255, 234));
+                background-clip: text;
+                -webkit-background-clip: text;
+                cursor:default;
+            }   
+
+            #admin_options_form{
+                min-height: 50vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .btn{
+                border: none;
+                border-radius: 15px;
+                padding: 15px 15px;
+                background: linear-gradient(70deg, rgb(132, 247, 0),rgb(4, 235, 139));
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+                font-weight: 800;
+                font-size: 15px;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+            }
+
+            .btn:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgb(4, 235, 139),rgb(132, 247, 0));
+                transition: all 0.3s ease-in-out;
+            }
+        </style>
+    </body>
+</html>

@@ -98,6 +98,7 @@ def delete_a_batch(selected_batch):
 def remove_a_student(selected_batch,idd):
     if selected_batch == "q":
         return False
+    
     if table_exists(selected_batch):        
         if id_exists(selected_batch,idd) and idd.isdigit():
             cur.execute(f"DELETE FROM '{selected_batch}' WHERE id=?",(idd,))
@@ -112,14 +113,12 @@ def remove_a_student(selected_batch,idd):
             return True
         else:
             print("[bold red]Student Not Found Invalid Id[/bold red]")
-            return False        
+            return "Student Not Found Invalid Id"        
     else:
         print("[bold red]Batch Not Found[/bold red]")
-        return False
+        return "Batch Not Found"
     
-def enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embedding):
-    selected_batch = ask_user("[bold blue]Enter The Name Of Batch You Wanna Enroll A Student In: [/bold blue]")
-    
+def enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embedding):    
     if table_exists(selected_batch):
         joining_date = date.today()
         joining_date = f"Date: {joining_date.day}\nMonth: {joining_date.month}\nYear: {joining_date.year}"
@@ -133,7 +132,7 @@ def enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embe
         
         if maxx >= 0.65:
             print("[bold orange]Student With This Face Already Exists: [/bold orange]")
-            return False
+            return "Student With This Face Already Exists"
         
         cur.execute(f"INSERT INTO '{selected_batch}' (name,age,joining_date) VALUES (?,?,?)",(name_of_student,age_of_student,joining_date))
         attendace_database_conn.commit()
@@ -144,34 +143,31 @@ def enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embe
             temp_emebddings = np.zeros((stored_embeddings.shpae[0]* 2 ,512))
             
             temp_emebddings[:stored_embeddings.shape[0]] = stored_embeddings
+            stored_embeddings = temp_emebddings
         
         stored_embeddings[assigned_id-1] = new_face_embedding
 
         np.save(path,stored_embeddings)
         
-        if isinstance(new_face_embedding,str) or isinstance(new_face_embedding,bool):
-            return False
-        else:
-            return assigned_id
+        return assigned_id
     else:
         print("[bold red]Batch Not Found[/bold red]")
-        return False
+        return "Table Dosent Exists"
 
 def admin_options():
     options = "[bold purple]Press 1 To Add New Batch \nPress 2 To Delete A Batch \nPress 3 To Remove A Student \nPress 4 To Enroll A Student\nPress Q to Quit\n: [/bold purple]"
 
     while True:
-    
         names = list_all_batches() 
         
         for i,name in enumerate(names):
             print(f"[bold purple]{i}: {name}\n [/bold purple]")
 
         option_selected = ask_user(options)
-        
-        selected_batch = ask_user("[bold blue]Enter Name Of Batch You Wanna Add: [/bold blue]")
-        
+                
         if option_selected == '1':
+            selected_batch = ask_user("[bold blue]Enter Name Of Batch: [/bold blue]")
+            
             out = add_new_batch(selected_batch)
 
             if not out:
@@ -180,25 +176,33 @@ def admin_options():
                 print("[bold green]Batch Created [/bold green]")
 
         elif option_selected == '2':
+            selected_batch = ask_user("[bold blue]Enter Name Of Batch: [/bold blue]")
+
             out = delete_a_batch(selected_batch)
 
             if out:
-                print("[bold green]Batch Deleted [/bold green]")
+                print("[bold green]Batch Deleted Successfully[/bold green]")
             else:
-                print("[bold orange]No Batch Exists With This Name [/bold orange]")
+                print("[bold red]No Batch Found[/bold red]")
 
         elif option_selected == '3':
+            selected_batch = ask_user("[bold blue]Enter Name Of Batch: [/bold blue]")
+
             idd = ask_user("[bold lime]Enter Id Of Student You wanna Remove: [bold /lime]")
             out = remove_a_student(selected_batch,idd)
             
-            if out:
+            if isinstance(out,str):
+                print(f"[bold red]{out} [/bold red]")
+                            
+            elif isinstance(out,bool):
                 print("[bold green]Student Removed [/bold green]")
-            else:
-                print("[bold yellow]No Student With This id Is Registered [/bold yellow]")
+            
 
         elif option_selected == '4':
-            name_of_student = input("[bold cyan]Enter The Name Of Student Your Wanna Enroll: [/bold cyan]")
-            age_of_student = input("[bold cyan]Enter The Age Of Student You Wanna Enroll: [/bold cyan]")
+            selected_batch = ask_user("[bold blue]Enter Name Of Batch: [/bold blue]")
+
+            name_of_student = ask_user("[bold cyan]Enter The Name Of Student Your Wanna Enroll: [/bold cyan]")
+            age_of_student = ask_user("[bold cyan]Enter The Age Of Student You Wanna Enroll: [/bold cyan]")
             new_face_embedding = capture_face()
                     
             out = enroll_a_student(selected_batch,name_of_student,age_of_student,new_face_embedding)
@@ -212,66 +216,57 @@ def admin_options():
                 print(f"[bold green]Student Regsitered Sucessfully! [bold green] \n[bold blue] Student Id => {out}[/bold blue]")
         elif option_selected == "q":
             print("[bold yellow]Going Back! [/bold yellow]")
+            break
         else:
             print(f"[bold cream]No Option Matches [/bold cream]")
             break 
 
-def conduct_attendance(selected_batch):
+def conduct_attendance(selected_batch,scan_result):
     date_today = date.today()
 
-    while True:
-        print("[bold blue]Starting Face Scan Please Stand Idle [/bold blue]")
+    print("[bold blue]Starting Face Scan Please Stand Idle [/bold blue]")
+    
+    if isinstance(scan_result,str):
+        print(f"[bold red] {scan_result} [/bold red]")
+        return scan_result        
+    
+    path = f"{embedding_file_det}{selected_batch}.npy"
+    
+    stored_embeddings = np.load(path)
+    
+    sims = (scan_result @ stored_embeddings.T).flatten()
+    matching_id = int(np.argmax(sims))
+    
+    if sims[matching_id] < 0.65:
+        print("[bold red]Invalid Face [/bold red]")
         
-        scan_result = capture_face()
+        return "Student Not Enrolled"    
+    
+    date_today = [date_today.day,date_today.month,date_today.month]
+    
+    cur.execute(f"SELECT attendance FROM '{selected_batch}' WHERE id = ?",(matching_id+1,))
+    result = cur.fetchone()
+    result  = result[0]
+    
+    if result is not None:
+        result = json.loads(result)
         
-        if isinstance(scan_result,str):
-            if scan_result.lower() == "quit":
-                print("[bold yellow]Quitting [/bold yellow]")
-                break
+        if date_today in result:
+            print("[bold orange]Already Marked For Today [/bold orange]")
+            return "Already Marked For Today"
+
+        result.append(date_today)
+    else:
+        result = [date_today]
             
-            print(scan_result)
-            continue
+    result = json.dumps(result)
+    
+    cur.execute(f"UPDATE '{selected_batch}' SET attendance = ? WHERE id = ?",(result,matching_id+1))
+    attendace_database_conn.commit()
 
-        elif isinstance(scan_result,bool):
-            print("[bold red]Some Error Occured Try Again [/bold red]")
-            continue
-        
-        path = f"{embedding_file_det}{selected_batch}.npy"
-        
-        stored_embeddings = np.load(path)
-        
-        sims = (scan_result @ stored_embeddings.T).flatten()
-        matching_id = int(np.argmax(sims))
-        
-        if sims[matching_id] < 0.65:
-            print("[bold red]Invalid Face [/bold red]")
-            break
-        
-        date_today = [date_today.day,date_today.month,date_today.month]
-        
-        cur.execute(f"SELECT attendance FROM '{selected_batch}' WHERE id = ?",(matching_id+1,))
-        result = cur.fetchone()
-        result  = result[0]
-        
-        if result is not None:
-            result = json.loads(result)
-            
-            if date_today in result:
-                print("[bold orange]Already Marked For Today [/bold orange]")
-                break
-
-            result.append(date_today)
-        else:
-            result = [date_today]
-                
-        result = json.dumps(result)
-        
-        cur.execute(f"UPDATE '{selected_batch}' SET attendance = ? WHERE id = ?",(result,matching_id+1))
-        attendace_database_conn.commit()
-
-        print("[bold green]Attendence Was Successful [/bold green]")
-
-        break
+    print("[bold green]Attendence Was Successful [/bold green]")
+    
+    return True
         
 def student_option():
     hour = datetime.now().hour
@@ -283,7 +278,9 @@ def student_option():
     selected_batch = ask_user("[bold cyan]Enter Your Batch: [/bold cyan]")
     
     if table_exists(selected_batch):
-        conduct_attendance(selected_batch)
+        scan_result = capture_face()
+        
+        conduct_attendance(selected_batch,scan_result)
     else:
         return False
 

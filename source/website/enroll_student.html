@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+            Enroll Student
+        </title>
+    </head>
+
+    <body>
+        <h1>Enroll Student</h1>
+
+        <div id="message_div">
+
+        </div>
+        <form action="enroll_student.html" id="student_data_form">
+            <input type="text" required placeholder="Enter Name" class="input_field" id="student_name">
+            <input type="number" required placeholder="Enter Age" class="input_field" id="student_age">
+
+            <select name="course" id="course_selector" required class="input_field">
+
+            </select>
+
+            <video id="camera" autoplay></video>
+            <canvas id="canvas"></canvas>
+
+            <button id="capture/reset" class="btn" type="button">Capture</button>
+            <button class="btn" type="submit">Enroll</button>
+        </form>
+
+        <script>
+            async function check_auth(){
+                const response = await fetch("http://127.0.0.1:8004/check_auth");
+
+                const result = await response.json();
+                
+                if(!result["auth_status"]){
+                    window.location.href = "admin_login_page.html";
+                }
+            }
+
+            check_auth();
+
+            const batch_selector = document.getElementById("course_selector");
+            const message_div = document.getElementById("message_div");
+
+            async function add_batches() {
+                const response = await fetch("http://127.0.0.1:8004/list_batches");
+                const result = await response.json();
+                const batches = result["all_batches"];
+
+                for(let i =0;i<batches.length;i++){
+                    cur_batch = batches[i];
+
+                    const new_option = document.createElement("option");
+                    // new_option.classList.add("select_element")
+
+                    new_option.value = cur_batch;
+                    new_option.textContent = cur_batch;
+
+                    batch_selector.appendChild(new_option);
+                }
+
+                if (batches.length <= 0){
+                    const new_option = document.createElement("option");
+                    new_option.value = "none";
+                    new_option.textContent = "No Options Available";
+                    new_option.classList.add("select_element")
+
+                    batch_selector.appendChild(new_option);
+                }
+            }
+
+            add_batches();
+
+            const video = document.getElementById("camera");
+            const canvas = document.getElementById("canvas");
+
+            navigator.mediaDevices.getUserMedia({video:true}).then(stream => {
+               video.srcObject = stream; 
+            });
+
+            
+            const student_data_form = document.getElementById("student_data_form");
+
+            const cap_reset_btn = document.getElementById("capture/reset");
+
+            let base64Image = null;
+
+            cap_reset_btn.addEventListener("click",(event) => {
+                if (cap_reset_btn.textContent === "Capture"){
+                    cap_reset_btn.textContent = "Reset";
+
+                    video.pause();
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    const ctx = canvas.getContext("2d");
+
+                    ctx.drawImage(video,0,0); 
+
+                    canvas.toBlob(blob => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        
+                        reader.onloadend = function() {
+                            base64Image = reader.result;
+                        }
+
+                    });
+                }
+                else{
+                    cap_reset_btn.textContent = "Capture";
+
+                    video.play();
+                    base64Image = null;
+                }
+            });
+
+            student_data_form.addEventListener("submit",async (event) => {
+                event.preventDefault();
+
+                if(base64Image === null){
+                    const message_span = document.createElement("span");
+
+                    message_span.classList.add("error_span");
+                    message_span.textContent = "Please Click Picture First";
+                    
+                    message_div.appendChild(message_span);
+                    message_div.classList.add("show_div");
+
+                    await new Promise(resolve => setTimeout(resolve,2000));
+
+                    message_div.classList.remove("show_div");
+                    message_div.removeChild(message_span)
+                    message_div.textContent = "";
+
+                    return;
+                }
+
+                if(batch_selector.value === "none"){
+                    const message_span = document.createElement("span");
+
+                    message_span.classList.add("error_span");
+                    message_span.textContent = "No Course Selected";
+                    
+                    message_div.appendChild(message_span);
+                    message_div.classList.add("show_div");
+
+                    await new Promise(resolve => setTimeout(resolve,1000));
+
+                    message_div.classList.remove("show_div");
+                    message_div.removeChild(message_span)
+                    message_div.textContent = "";
+
+                    return;
+                }
+
+                const name = document.getElementById("student_name");
+                const age = document.getElementById("student_age");
+                const batch_selected = batch_selector.value;
+
+                const response = await fetch("http://127.0.0.1:8004/enroll_student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({student_name:name.value,student_age:age.value,selected_batch:batch_selected,student_picture:base64Image})});
+
+                const result = await response.json();
+
+                video.play();
+                cap_reset_btn.textContent = "Capture";
+                
+                if (typeof result["output_reply"] === "string" || typeof result["output_reply"] === "boolean"){
+                    const message_span = document.createElement("span");
+
+                    message_span.classList.add("error_span");
+                    console.log(result["output_reply"])
+                    message_span.textContent = result["output_reply"];
+                    
+                    message_div.appendChild(message_span);
+                    message_div.classList.add("show_div");
+
+                    await new Promise(resolve => setTimeout(resolve,2000));
+
+                    message_div.classList.remove("show_div");
+                    message_div.removeChild(message_span);
+                    message_div.textContent = "";
+                    
+                    student_data_form.reset();
+                }
+                else{
+                    const message_span = document.createElement("span");
+
+                    message_span.classList.add("success_span");
+                    console.log(result["output_reply"])
+                    message_span.textContent = `Student Successfully Registered And Have id ${result["output_reply"]}`;
+                    
+                    message_div.appendChild(message_span);
+                    message_div.classList.add("show_div");
+
+                    await new Promise(resolve => setTimeout(resolve,2000));
+
+                    message_div.classList.remove("show_div");
+                    message_div.removeChild(message_span);
+                    message_div.textContent = "";
+                    student_data_form.reset();  
+                }
+            });
+            
+            
+        </script>
+
+        <style>
+            h1{
+                text-align: center;
+                font-family:Georgia, 'Times New Roman', serif;
+                font-size: 30px;
+                color: transparent;
+
+                background: linear-gradient(120deg, rgb(242, 255, 0), rgb(90, 215, 0));
+                background-clip: text;
+                -webkit-background-clip: text;
+                cursor:default;
+            }   
+
+            #message_div{
+                text-align: center;
+                opacity: 0;
+                transition: all 0.3s ease-in-out;
+                transform: translateY(-100px);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            #message_div.show_div{
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            .error_span{
+                border: solid red;
+                border-radius: 15px;
+                padding: 10px 10px;
+                background: linear-gradient(180deg , rgb(126, 46, 0), rgb(225, 0, 0));
+            }
+
+            .success_span{
+                border: solid rgb(89, 255, 0);
+                border-radius: 15px;
+                padding: 10px 10px;
+                background: linear-gradient(180deg , rgb(128, 175, 0),rgb(5, 255, 130));
+            }
+
+            #student_data_form{
+                min-height: 50vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+            }
+
+            #canvas{
+                display: none;
+            }
+
+            .select_element{
+                font-family: 'Times New Roman', Times, serif;
+                font-weight: 500;
+                border-radius: 20px;
+                padding: 10px 10px;
+                background: linear-gradient(70deg, rgba(0, 229, 255, 0.488),rgba(0, 217, 255, 0.465));
+                transition: all 0.3s ease-in-out;
+                cursor: pointer;
+            }
+
+            .select_element:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgba(0, 255, 115, 0.465),rgba(204, 255, 0, 0.488));
+                transition: all 0.3s ease-in-out;
+            }
+
+            .input_field{
+                font-family: 'Times New Roman', Times, serif;
+                font-weight: 500;
+                border-radius: 20px;
+                padding: 10px 10px;
+                background: linear-gradient(70deg, rgba(204, 255, 0, 0.488),rgba(0, 255, 115, 0.465));
+                transition: all 0.3s ease-in-out;
+                cursor: pointer;
+            }
+
+            .input_field:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgba(0, 255, 115, 0.465),rgba(204, 255, 0, 0.488));
+                transition: all 0.3s ease-in-out;
+            }
+
+            .btn{
+                border: none;
+                border-radius: 15px;
+                padding: 15px 15px;
+                background: linear-gradient(70deg, rgb(132, 247, 0),rgb(4, 235, 139));
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+                font-weight: 800;
+                font-size: 15px;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+            }
+
+            .btn:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgb(4, 235, 139),rgb(132, 247, 0));
+                transition: all 0.3s ease-in-out;
+            }
+
+        </style>
+    </body>
+</html>

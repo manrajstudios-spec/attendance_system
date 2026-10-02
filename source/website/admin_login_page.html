@@ -2,151 +2,122 @@
 <html>
     <head>
         <title>
-            Admin Login Page
+            Login Page
         </title>
     </head>
 
     <body>
-        <h1>Login Page</h1>
+        <h1>Admin Login Page</h1>
         
-        <div id="error">
-            <span>
-                Incorect Password
-            </span>
+        <div id="error_div">
+            <span id="error_span">Wrong Password</span>
         </div>
 
-        <form action="admin_login_page.html" id="login">
-            <input type="password" placeholder="Enter Password" id="pass" required>
-            <br>
-            <button type="submit" id="btn">
-                Submit
-            </button>
+        <form action="admin_login_page.html" id="login_form">
+            <input type="password" id="password_feild" required placeholder="Enter Password">
+            <button type="submit" class="btn">Enter</button>
         </form>
-        
 
         <script>
-            const form = document.getElementById("login");
+            const login_form = document.getElementById("login_form");
 
-            form.addEventListener("submit",async (event) => {
+            const error_div = document.getElementById("error_div");
+            
+            login_form.addEventListener("submit", async(event)=>{
                 event.preventDefault();
 
-                function hide_error(){
-                    const error = document.getElementById("error");
+                const password_field = document.getElementById("password_feild");
 
-                    error.classList.remove("show");
-                }
+                const response = await fetch("http://127.0.0.1:8004/verify_password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({admin_password:password_field.value})});
 
-                const input_pass_feild = document.getElementById("pass");
-                
-                console.log(input_pass_feild.value)
-                const response = await fetch("http://127.0.0.1:8004/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:input_pass_feild.value})})
+                result = await response.json();
 
-                const result = await response.json()
-
-                if(result["sucess"]){
-                    window.location.href = "admin_page.html"
+                if (result["success"]){
+                    console.log("Verified");
+                    window.location.href = "admin_options.html";
                 }
                 else{
-                    const error = document.getElementById("error");
-                    error.classList.add("show");
+                    error_div.classList.add("show_error");
 
-                    await new Promise(resolve => setTimeout(resolve,3000));
-                    error.classList.remove("show");
-                    window.location.href = "main_menu.html"
+                    await new Promise(resolve => setTimeout(resolve,2000));
+
+                    error_div.classList.remove("show_error");
                 }
             });
-
         </script>
-
+            
         <style>
-
-            #error{
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                transform: translateY(-50px);
-                opacity: 0;
-                transition: 0.2s ease-in-out;
-            }
-
-            #error.show{
-                opacity: 1;
-                transform: translate(0px);
-            }
-
-            span{
-                border: solid 3px rgba(253, 40, 2, 0.937);
-                border-radius: 20px;
-                padding: 10px 10px;
-                color: white;
-                font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-                font-size: 15px;
-                font-weight: 800;
-                letter-spacing: 1.2px;
-                background-color: rgba(229, 7, 7, 0.689);
-            }
-
             h1{
                 text-align: center;
-                border: none;
-                margin-top: 20px;
-                color: white;
-                font-family: Arial,sans-serif;
-                font-size: 28px;
-                font-weight: 700;
-                background: linear-gradient(120deg, rgba(9, 163, 180, 0),rgb(9, 215, 198));
-                background-clip: border-box;
+                font-family:Georgia, 'Times New Roman', serif;
+                font-size: 30px;
+                color: transparent;
+
+                background: linear-gradient(120deg, rgb(3, 242, 255), rgb(25, 0, 255));
+                background-clip: text;
                 -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                letter-spacing: 2px;
+                cursor:default;
+            }   
+
+            #error_div{
+                text-align: center;
+                opacity: 0;
+                transition: all 0.3s ease-in-out;
+                transform: translateY(-100px);
             }
 
-            form{
-                min-height: 30vh;
-                display: flex;
-                justify-content: center;
-                flex-direction: column;
-                align-items: center;
-                gap:15px
+            #error_div.show_error{
+                opacity: 1;
+                transform: translateY(0);
             }
 
-            #pass{
-                border: none;
+            #error_span{
+                border: solid red;
                 border-radius: 15px;
-                background-color: rgba(9, 205, 201, 0.632);
                 padding: 10px 10px;
-                font-size: 15px;
-                font-family: 'Courier New',monospace;
-                font-weight: 700;
-                transition: all 0.2s ease-in;
-                box-shadow: 0 4px 20px rgba(37, 235, 215, 0.593);
-                cursor: pointer;
+                background: linear-gradient(180deg , rgb(126, 46, 0), rgb(225, 0, 0));
+            }
+            
+            #login_form{
+                min-height: 50vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
             }
 
-            #pass:hover{
-                transform: translateY(2px) scale(1.1);
-                background-color: rgb(0, 255, 229);
-                box-shadow: 0 7px 50 rgba(37, 156, 235, 0.593);
+            #password_feild{
+                font-family: 'Times New Roman', Times, serif;
+                font-weight: 500;
+                border-radius: 20px;
+                padding: 10px 10px;
+                background: linear-gradient(70deg, rgba(0, 12, 237, 0.488),rgba(0, 242, 255, 0.465));
+                transition: all 0.3s ease-in-out;
             }
 
-            #btn{
+            #password_feild:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgba(0, 192, 235, 0.478),rgba(0, 59, 251, 0.371));
+                transition: all 0.3s ease-in-out;
+            }
+
+            .btn{
                 border: none;
                 border-radius: 15px;
-                background-color: rgba(9, 205, 201, 0.632);
-                padding: 15px 25px;
+                padding: 15px 15px;
+                background: linear-gradient(70deg, rgb(0, 12, 237),rgb(0, 242, 255));
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+                font-weight: 800;
                 font-size: 15px;
-                font-family: 'Courier New',monospace;
-                font-weight: 700;
-                transition: all 0.2s ease-in;
-                box-shadow: 0 4px 20px rgba(37, 235, 215, 0.593);
                 cursor: pointer;
+                transition: all 0.3s ease-in-out;
             }
 
-            #btn:hover{
-                transform: translateY(2px) scale(1.1);
-                background-color: rgb(0, 255, 229);
-                box-shadow: 0 7px 50 rgba(37, 156, 235, 0.593);
+            .btn:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgb(0, 192, 235),rgb(0, 59, 251));
+                transition: all 0.3s ease-in-out;
             }
         </style>
     </body>

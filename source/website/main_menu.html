@@ -1,101 +1,78 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Attendace System</title>
+        <title>Attendance System</title>
     </head>
 
     <body>
-        <h1 id="heading">Attendace System</h1>
- 
-        <form action="main_menu.html" id="main_form">
+        <h1>Attendance System</h1>
+
+        <form action="main_menu.html" id="options_form">
             <button type="submit" value="admin" class="btn">Admin</button>
-            <br>
-            <br>
             <button type="submit" value="student" class="btn">Student</button>
         </form>
 
-        <style>
-            body { 
-                margin: 0;
-                min-height: 100vh;
-    
-                background: linear-gradient(
-                    135deg,
-                    #f8faff,
-                    #eef3ff
-                );
-    
-                font-family: Arial, sans-serif;
-            }
-            
-            #heading{
-                text-align: center;
-                margin-top: 18px;
-
-                font-family: Arial, sans-serif;
-                font-size: 32px;
-                font-weight: 700;
-
-                background: linear-gradient(90deg, #2563eb, #4f46e5);
-                background-clip:border-box;
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-
-                letter-spacing: -0.7px;
-            }
-
-            #main_form{
-                min-height: 70vh;                
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                gap: 15px;
-            }
-            
-            .btn {
-                padding: 12px 24px;
-                border: none;
-                border-radius: 10px; 
-                background: #2563eb;
-                color: white;
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease-in-out;
-                box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
-            }
-
-            .btn:hover {
-                background: #1d4ed8;
-                transform: translateY(-2px);
-                box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
-            }
-        </style>
-
         <script>
-            async function reset_auth(){
-                const res = await fetch("http://127.0.0.1:8004/main_menu");
+            async function reset_auth() {
+                const response = await fetch("http://127.0.0.1:8004/reset_auth")
             }
 
             reset_auth();
-            
-            const form = document.getElementById("main_form");
 
-            form.addEventListener("submit",(event) => {
+            const options_form = document.getElementById("options_form");
+
+            options_form.addEventListener("submit",(event) => {
                 event.preventDefault();
-                
-                const pressed_button = event.submitter;
-            
-                console.log(pressed_button.value);
-            
-                if (pressed_button.value === "admin"){
+
+                if (event.submitter.value === "admin"){
                     window.location.href = "admin_login_page.html"
                 }
                 else{
                     window.location.href = "student_page.html"
                 }
             });
+            
         </script>
+
+        <style>
+            h1{
+                text-align: center;
+                font-family:Georgia, 'Times New Roman', serif;
+                font-size: 30px;
+                color: transparent;
+
+                background: linear-gradient(60deg, rgb(0, 43, 137), rgb(0, 221, 255));
+                background-clip: text;
+                -webkit-background-clip: text;
+                cursor:default;
+            }
+
+            #options_form{
+                min-height: 50vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .btn{
+                border: none;
+                border-radius: 15px;
+                padding: 15px 15px;
+                background: linear-gradient(70deg, rgb(44, 173, 196),rgb(12, 59, 146));
+                font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+                font-weight: 800;
+                font-size: 15px;
+                cursor: pointer;
+                transition: all 0.3s ease-in-out;
+            }
+
+            .btn:hover{
+                transform: translateY(5px) scale(1.1);
+                background: linear-gradient(70deg, rgb(44, 64, 196),rgb(12, 146, 139));
+                transition: all 0.3s ease-in-out;
+            }
+        </style>
     </body>
 </html>

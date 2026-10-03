@@ -16,7 +16,10 @@
 
             </select>
 
-            <input type="number" required id="id" class="input_field">
+            <select name="students" id="students_list" class="input_field" required>
+
+            </select>
+
             <button type="submit" class="btn">Remove</button>
         </form>
 
@@ -62,14 +65,60 @@
                 }
             }
 
-            add_batches();
+            const students_drop_down = document.getElementById("students_list");
+
+            async function add_students() {
+                if(batch_selector.value === "No Options Available"){
+                    const new_option = document.createElement("option");
+                    new_option.value = "none";
+                    new_option.textContent = "No Options Available";
+                    new_option.classList.add("select_element")
+                    
+                    students_drop_down.appendChild(new_option);
+                    return;
+                }
+
+                console.log(batch_selector.value);
+                
+                const response = await fetch("http://127.0.0.1:8004/list_students",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({selected_batch:batch_selector.value})});    
+                const result = await response.json();
+
+                const students = result["students"];
+
+                for(let i=0;i<students.length;i++){
+                    const cur_student = students[i];
+
+                    const new_option = document.createElement("option");
+
+                    new_option.value = cur_student[1];
+                    new_option.textContent = cur_student[0];
+
+                    students_drop_down.appendChild(new_option);
+                }
+
+                if(students.length <= 0){
+                    const new_option = document.createElement("option");
+                    new_option.value = "none";
+                    new_option.textContent = "No Options Available";
+                    new_option.classList.add("select_element")
+                    
+                    students_drop_down.appendChild(new_option);
+                    return;
+                }
+            }
+
+            async function initialize() {
+                await add_batches();
+                await add_students();
+            }
+
+            initialize();
 
             const student_data_form = document.getElementById("student_data_form");
 
             student_data_form.addEventListener("submit",async (event) => {
                 event.preventDefault();
                 
-                const idd = document.getElementById("id");
                 const batch_selected = batch_selector.value;
 
                 if (batch_selected.value === "No Options Available"){
@@ -88,10 +137,13 @@
                     return;
                 }
 
-                const response = await fetch("http://127.0.0.1:8004/remove_student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({student_id:idd.value,selected_batch:batch_selected})});
+                const response = await fetch("http://127.0.0.1:8004/remove_student",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({student_id:students_drop_down.value,selected_batch:batch_selected})});
 
                 const result = await response.json();
-                
+
+                batch_selector.textContent = "";
+                students_drop_down.textContent = "";
+
                 if (typeof result["success"] === "string"){
                     const new_msg = document.createElement("span");
 
@@ -118,6 +170,9 @@
                     message_div.classList.remove("show_div");
                     message_div.removeChild(new_msg);
                 }
+
+                initialize();
+
             });
 
         </script>

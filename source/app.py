@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from admin_auth import compare_pass
 from call_modle import recognize_faces
 from fastapi.middleware.cors import CORSMiddleware
-from main import add_new_batch,delete_a_batch,enroll_a_student,remove_a_student,table_exists,list_all_batches,conduct_attendance
+from main import add_new_batch,delete_a_batch,enroll_a_student,remove_a_student,table_exists,list_all_batches,conduct_attendance,list_all_students
 
 app = FastAPI()
 
@@ -102,7 +102,8 @@ def remove_student(student_data:dict):
     
     print(f"Batch: {selected_batch} IDD: {student_id}")
     
-    result = remove_a_student(selected_batch=selected_batch,idd=student_id)
+    print(type(student_id))
+    result = remove_a_student(selected_batch=selected_batch,idd=int(student_id))
 
     print(f"Removing Status: {result}")
 
@@ -126,4 +127,14 @@ def attend_class(student_data:dict):
 
     return {"result":result}
     
+@app.post("/list_students")
+def list_students(batch_data:dict):
+    selected_batch = batch_data["selected_batch"]
+    
+    print(f"Batch: {selected_batch}")
+    students = list_all_students(selected_batch=selected_batch)
+
+    print(f"ALL STUDENTS: {students}")
+
+    return {"students":students}
     

@@ -32,7 +32,12 @@ def list_all_batches():
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
 
     return [row[0] for row in cur.fetchall()] # row[0] bcz fetchall returns a tuple so names will be as [(a,),(b,),....,]
-        
+
+def list_all_students(selected_batch):
+    cur.execute(f'SELECT name, id FROM "{selected_batch}"')
+
+    return [[row[0],row[1]] for row in cur.fetchall()]
+
 def admin_login_handler():
     try :
         with open(password_file,'r') as file:
@@ -100,7 +105,7 @@ def remove_a_student(selected_batch,idd):
         return False
     
     if table_exists(selected_batch):        
-        if id_exists(selected_batch,idd) and idd.isdigit():
+        if id_exists(selected_batch,idd):
             cur.execute(f"DELETE FROM '{selected_batch}' WHERE id=?",(idd,))
 
             attendace_database_conn.commit()

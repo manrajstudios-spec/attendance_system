@@ -9,32 +9,16 @@ The project provides an admin interface for managing batches and students, along
 <!-- Add screenshots here -->
 
 ### Home Page
-
+<img width="1868" height="959" alt="Screenshot From 2026-10-03 12-40-42" src="https://github.com/user-attachments/assets/66ec518b-bdee-47e6-a0d6-9b8383e2d194" />
 
 ### Admin Dashboard
-
-
-### Student Enrollment
-
-
-### Attendance
-
+<img width="1868" height="959" alt="Screenshot From 2026-10-03 12-41-11" src="https://github.com/user-attachments/assets/84310c22-89d0-430d-bcfe-eb131f6bcd32" />
 
 ### Student Management
-
+<img width="1868" height="959" alt="Screenshot From 2026-10-03 12-42-07" src="https://github.com/user-attachments/assets/21586c67-3487-46fa-b696-551b09ab8f7e" />
+<img width="1868" height="959" alt="Screenshot From 2026-10-03 12-42-13" src="https://github.com/user-attachments/assets/afb421a2-f1f9-4d6d-8d44-6c8c0a732b36" />
 
 ---
-
-## How To use
-
-- Download required packages from requirements.txt
-- For CLI 
-- python source/main.py
-- For WebSite 
-- start uvicorn server using 
-- uvicorn source/app:app --reload --host 0.0.0.0 --port 8004
-- then open main_menu.html on your browser
-
 
 ## Features
 
@@ -64,6 +48,17 @@ The project provides an admin interface for managing batches and students, along
 - Responsive form and management interfaces
 
 ---
+
+## How To use
+
+- Download required packages from requirements.txt
+- For CLI 
+- python source/main.py
+- For WebSite 
+- start uvicorn server using 
+- uvicorn source/app:app --reload --host 0.0.0.0 --port 8004
+- then open main_menu.html on your browser
+
 
 ## Tech Stack
 

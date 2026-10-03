@@ -56,7 +56,7 @@ The project provides an admin interface for managing batches and students, along
 - python source/main.py
 - For WebSite 
 - start uvicorn server using 
-- uvicorn source/app:app --reload --host 0.0.0.0 --port 8004
+- uvicorn source.app:app --reload --host 0.0.0.0 --port 8004
 - then open main_menu.html on your browser
 
 

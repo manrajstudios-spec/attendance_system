@@ -69,7 +69,6 @@ The project provides an admin interface for managing batches and students, along
 - SQLite
 - NumPy
 - InsightFace
-- ArcFace
 
 ### Frontend
 
